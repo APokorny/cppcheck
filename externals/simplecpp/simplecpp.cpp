@@ -33,6 +33,7 @@
 #include <stack>
 #include <stdexcept>
 #include <utility>
+#include <unordered_set>
 
 #ifdef SIMPLECPP_WINDOWS
 #include <windows.h>
@@ -2087,8 +2088,14 @@ static const simplecpp::Token *gotoNextLine(const simplecpp::Token *tok)
 
 static std::string openHeader(std::ifstream &f, const simplecpp::DUI &dui, const std::string &sourcefile, const std::string &header, bool systemheader)
 {
+    static std::unordered_set<std::string>  missing_files;
+
+    if (missing_files.find(header) != end(missing_files))
+        return "";
     if (isAbsolutePath(header)) {
         f.open(header.c_str());
+        if (!f.is_open())
+            missing_files.insert(header);
         return f.is_open() ? simplecpp::simplifyPath(header) : "";
     }
 
@@ -2115,6 +2122,7 @@ static std::string openHeader(std::ifstream &f, const simplecpp::DUI &dui, const
             return simplecpp::simplifyPath(s);
     }
 
+    missing_files.insert(header);
     return "";
 }
 
